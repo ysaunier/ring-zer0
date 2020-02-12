@@ -7,6 +7,7 @@ from core.client import RingClient
 def execute():
     client = RingClient(challenge=13, cookie=settings.SESSION_ID)
     page = client.get_challenge()
+
     message = page.find('div', attrs={'class': 'message'})
     text = message.contents[2].strip()
 
