@@ -1,6 +1,16 @@
+import re
+
 import requests
 from bs4 import BeautifulSoup, PageElement
 
+
+class FlagNotFound(Exception):
+    def __init__(self, html: str):
+        self.html = html
+
+
+# text = html_to_text(html=response.text)
+# m = re.search(pattern=r'(FLAG-[A-Za-z0-9]+)', string=text, flags=re.MULTILINE)
 
 class RingClient:
     def __init__(self, challenge: int, cookie: str):
@@ -19,5 +29,9 @@ class RingClient:
         soup = BeautifulSoup(response.content, 'html5lib')
         try:
             return soup.find('div', attrs={'class': 'alert alert-info'}).string
-        except AttributeError:
-            return soup.prettify()
+        except AttributeError as e:
+            m = re.search(pattern=r'(FLAG-[A-Za-z0-9]+)', string=soup.prettify(), flags=re.MULTILINE)
+            flag = m.group(1) if m else 'not found'
+            if flag:
+                return flag
+            raise FlagNotFound(html=soup.prettify()) from e
