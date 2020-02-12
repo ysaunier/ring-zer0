@@ -4,6 +4,7 @@ import requests
 from bs4 import BeautifulSoup, PageElement
 
 
+
 class FlagNotFound(Exception):
     def __init__(self, html: str, message):
         self.html = html
