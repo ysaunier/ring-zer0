@@ -13,6 +13,10 @@ pytest-testdox = "*"
 pylint = "*"
 
 [packages]
+requests = "*"
+bs4 = "*"
+html5lib = "*"
+hashlib = "*"
 
 [requires]
 python_version = "3.7"
