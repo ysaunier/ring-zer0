@@ -17,6 +17,8 @@ requests = "*"
 bs4 = "*"
 html5lib = "*"
 retrying = "*"
+pillow = "*"
+pytesseract = "*"
 
 [requires]
 python_version = "3.7"

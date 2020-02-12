@@ -4,6 +4,7 @@ PY_FILES:=$(shell find . -name '*.py' -not -path '*/node_modules/*' -not -path '
 
 install:
 	pipenv install
+	pipenv install --dev
 
 clean:
 	@find . -type f -name '*.py[co]' -delete -print -o -type d -name __pycache__ -delete >/dev/null

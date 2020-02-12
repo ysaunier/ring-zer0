@@ -1,23 +1,56 @@
-import settings
-from core.client import RingClient
+import base64
+from io import BytesIO
+
+from PIL import Image
+from pytesseract import image_to_string
+from retrying import retry
+
+from core.client import RingClient, retry_to_find_flag
+
+COLOR_BLACK = (0, 0, 0)
+COLOR_WHITE = (255, 255, 255)
 
 
-def decode_binary_string(text) -> str:
-    return ''.join(chr(int(text[i * 8:i * 8 + 8], 2)) for i in range(len(text) // 8))
+def string_to_image(img_string: str):
+    img_data = base64.b64decode(img_string)
+    return Image.open(BytesIO(img_data))
+
+
+def sanitize_image(img: Image):
+    sanitize_img = Image.new(mode='RGB', size=img.size)
+    data = img.getdata()
+
+    sanitize_data = []
+    for pixel in list(data):
+        sanitize_data.append(COLOR_BLACK if pixel == COLOR_WHITE else COLOR_WHITE)
+
+    sanitize_img.putdata(sanitize_data)
+    return sanitize_img
+
+
+@retry(
+    stop_max_attempt_number=10,
+    retry_on_exception=retry_to_find_flag
+)
+def resolve(client: RingClient):
+    print('New try!')
+    page = client.get_challenge(challenge=17)
+    message = page.find('div', attrs={'class': 'message'})
+    img_tag = message.contents[3]
+
+    img = string_to_image(img_string=img_tag.get('src')[22:])
+    sanitize_img = sanitize_image(img=img)
+
+    response = image_to_string(sanitize_img)
+    print(f'response '.ljust(20, '.') + f' : {response}')
+
+    print(client.send_answer(challenge=17, response=response))
 
 
 def execute():
     client = RingClient()
     client.login()
-    page = client.get_challenge(challenge=17)
-
-    message = page.find('div', attrs={'class': 'message'})
-    image_tag = message.contents[3]
-
-    print(image_tag.get('src'))
-    # response = hashlib.sha512(decode_binary_string(text=text).encode()).hexdigest()
-
-    # print(client.send_answer(response=response))
+    resolve(client=client)
 
 
 if __name__ == '__main__':

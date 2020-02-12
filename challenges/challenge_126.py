@@ -17,8 +17,6 @@ def load_words() -> dict:
 
 @retry(
     stop_max_attempt_number=10,
-    wait_exponential_multiplier=100,
-    wait_exponential_max=1000,
     retry_on_exception=retry_to_find_flag
 )
 def resolve(client: RingClient, word_refs: dict):
