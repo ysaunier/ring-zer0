@@ -1,5 +1,4 @@
-import hashlib
-
+import settings
 from core.client import RingClient
 
 
@@ -10,14 +9,15 @@ def decode_binary_string(text) -> str:
 def execute():
     client = RingClient()
     client.login()
-    page = client.get_challenge(challenge=14)
+    page = client.get_challenge(challenge=17)
 
     message = page.find('div', attrs={'class': 'message'})
-    text = message.contents[2].strip()
+    image_tag = message.contents[3]
 
-    response = hashlib.sha512(decode_binary_string(text=text).encode()).hexdigest()
+    print(image_tag.get('src'))
+    # response = hashlib.sha512(decode_binary_string(text=text).encode()).hexdigest()
 
-    print(client.send_answer(challenge=14, response=response))
+    # print(client.send_answer(response=response))
 
 
 if __name__ == '__main__':

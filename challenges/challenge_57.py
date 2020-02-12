@@ -1,10 +1,11 @@
-import settings
 from core.client import RingClient
 
 
 def execute():
-    client = RingClient(challenge=57, cookie=settings.SESSION_ID)
-    page = client.get_challenge()
+    client = RingClient()
+    client.login()
+    page = client.get_challenge(challenge=57)
+
     messages = page.findAll('div', attrs={'class': 'message'})
 
     hash_to_crack = messages[0].contents[2].strip()

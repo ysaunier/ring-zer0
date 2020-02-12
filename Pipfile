@@ -16,7 +16,7 @@ pylint = "*"
 requests = "*"
 bs4 = "*"
 html5lib = "*"
-hashlib = "*"
+retrying = "*"
 
 [requires]
 python_version = "3.7"

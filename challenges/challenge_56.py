@@ -1,6 +1,5 @@
 import hashlib
 
-import settings
 from core.client import RingClient
 
 
@@ -15,15 +14,16 @@ def build_list() -> dict:
 
 def execute():
     hashes = build_list()
+    client = RingClient()
+    client.login()
+    page = client.get_challenge(challenge=56)
 
-    client = RingClient(challenge=56, cookie=settings.SESSION_ID)
-    page = client.get_challenge()
     message = page.find('div', attrs={'class': 'message'})
     text = message.contents[2].strip()
 
     response = hashes.get(text)
 
-    print(client.send_answer(response=response))
+    print(client.send_answer(challenge=56, response=response))
 
 
 if __name__ == '__main__':

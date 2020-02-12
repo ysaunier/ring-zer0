@@ -4,22 +4,24 @@ import requests
 from bs4 import BeautifulSoup, PageElement
 
 
-
 class FlagNotFound(Exception):
     def __init__(self, html: str, message):
         self.html = html
         super().__init__(message)
 
 
-# text = html_to_text(html=response.text)
-# m = re.search(pattern=r'(FLAG-[A-Za-z0-9]+)', string=text, flags=re.MULTILINE)
+class NotConnected(Exception):
+    pass
+
+
+def retry_to_find_flag(exception):
+    return isinstance(exception, FlagNotFound)
+
 
 class RingClient:
-    def __init__(self, challenge: int, cookie: str):
-        self.challenge = challenge
-        self.url = f'https://ringzer0ctf.com/challenges/{challenge}'
+
+    def __init__(self):
         self.session = requests.Session()
-        self.session.headers.update({'cookie': f'PHPSESSID={cookie}'})
 
     @staticmethod
     def get_div_by_class(soup, style_class: str):
@@ -28,14 +30,33 @@ class RingClient:
         except AttributeError as e:
             return None
 
-    def get_challenge(self) -> PageElement:
-        response = self.session.get(self.url)
-        soup = BeautifulSoup(response.content, 'html5lib')
+    @staticmethod
+    def _raise_for_login(response):
+        if response.request.url[-5:] == 'login':
+            raise NotConnected()
+
+    def _response_to_soup(self, url: str):
+        response = self.session.get(url)
+        response.raise_for_status()
+        self._raise_for_login(response=response)
+        return BeautifulSoup(response.content, 'html5lib')
+
+    def login(self):
+        import settings
+        response = requests.post('https://ringzer0ctf.com/login', data={
+            'username': settings.RING_USERNAME,
+            'password': settings.RING_PASSWORD,
+        })
+        response.raise_for_status()
+        cookie = response.request.headers.get('Cookie')[10:]
+        self.session.headers.update({'cookie': f'PHPSESSID={cookie}'})
+
+    def get_challenge(self, challenge: int) -> PageElement:
+        soup = self._response_to_soup(url=f'https://ringzer0ctf.com/challenges/{challenge}')
         return soup.find('div', attrs={'class': 'challenge-wrapper'})
 
-    def send_answer(self, response):
-        response = self.session.get(f'{self.url}/{response}')
-        soup = BeautifulSoup(response.content, 'html5lib')
+    def send_answer(self, challenge: int, response):
+        soup = self._response_to_soup(url=f'https://ringzer0ctf.com/challenges/{challenge}/{response}')
 
         flag = self.get_div_by_class(soup=soup, style_class='alert alert-info')
         if not flag:
