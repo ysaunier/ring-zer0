@@ -1,4 +1,5 @@
 import base64
+import string
 from io import BytesIO
 
 from PIL import Image
@@ -41,7 +42,10 @@ def resolve(client: RingClient):
     img = string_to_image(img_string=img_tag.get('src')[22:])
     sanitize_img = sanitize_image(img=img)
 
-    response = image_to_string(sanitize_img)
+    response = image_to_string(
+        image=sanitize_img,
+        config=f'--oem 1 -l eng tessedit_char_whitelist {string.ascii_letters + string.digits}'
+    )
     print(f'response '.ljust(20, '.') + f' : {response}')
 
     print(client.send_answer(challenge=17, response=response))
